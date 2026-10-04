@@ -252,3 +252,59 @@ function renderAll() {
   renderSimpleList("epargne");
   renderDepensesFixes();
   renderSimpleList("depensesVariables");
+  updateTotals();
+}
+
+// --- Changement de personne ---
+function switchPerson(person) {
+  currentPerson = person;
+  document.querySelectorAll(".btn-person").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.person === person);
+  });
+  renderAll();
+  sauvegarder();
+}
+
+document.getElementById("btn-person-denis").addEventListener("click", () => switchPerson("Denis"));
+document.getElementById("btn-person-margot").addEventListener("click", () => switchPerson("Margot"));
+
+// --- Boutons d'ajout ---
+document.getElementById("btn-add-revenu").addEventListener("click", () => {
+  data[currentPerson].revenus.push(createItem());
+  renderSimpleList("revenus");
+});
+
+document.getElementById("btn-add-investissement").addEventListener("click", () => {
+  data[currentPerson].investissements.push(createItem());
+  renderSimpleList("investissements");
+});
+
+document.getElementById("btn-add-epargne").addEventListener("click", () => {
+  data[currentPerson].epargne.push(createItem());
+  renderSimpleList("epargne");
+});
+
+document.getElementById("btn-add-categorie-fixes").addEventListener("click", () => {
+  data[currentPerson].depensesFixes.push({ id: nextId(), nom: "", items: [] });
+  renderDepensesFixes();
+});
+
+document.getElementById("btn-add-depenseVariable").addEventListener("click", () => {
+  data[currentPerson].depensesVariables.push(createItem());
+  renderSimpleList("depensesVariables");
+});
+
+// --- Initialisation ---
+const dejaSauvegarde = charger();
+
+if (!dejaSauvegarde) {
+  data.Denis.revenus.push(createItem("Salaire"));
+  data.Denis.depensesFixes.push({ id: nextId(), nom: "Logement", items: [createItem("Loyer")] });
+  data.Denis.depensesVariables.push(createItem("Courses"));
+}
+
+document.querySelectorAll(".btn-person").forEach(btn => {
+  btn.classList.toggle("active", btn.dataset.person === currentPerson);
+});
+
+renderAll();
