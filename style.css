@@ -8,6 +8,7 @@ body {
   color: #1a1a1a;
   margin: 0;
   padding: 2rem 1rem;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -15,11 +16,32 @@ body {
   margin: 0 auto;
 }
 
-header h1 {
-  text-align: center;
-  font-size: 1.8rem;
+header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 1.5rem;
+}
+
+header h1 {
+  font-size: 1.8rem;
+  margin: 0;
   color: #111;
+}
+
+.btn-theme {
+  position: absolute;
+  right: 0;
+  background: #eee;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.3s ease;
 }
 
 .person-switcher {
@@ -38,6 +60,7 @@ header h1 {
   cursor: pointer;
   font-weight: 600;
   color: #555;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .btn-person.active {
@@ -51,6 +74,7 @@ header h1 {
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card h2 {
@@ -68,6 +92,13 @@ header h1 {
   .grid-2 {
     grid-template-columns: 1fr;
   }
+  header {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .btn-theme {
+    position: static;
+  }
 }
 
 .items-list {
@@ -83,22 +114,24 @@ header h1 {
   align-items: center;
 }
 
-.item-row input[type="text"] {
-  flex: 2;
+.item-row input[type="text"],
+.item-row input[type="number"] {
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 0.95rem;
   min-width: 0;
+  background-color: #fff;
+  color: #1a1a1a;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.item-row input[type="text"] {
+  flex: 2;
 }
 
 .item-row input[type="number"] {
   flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  min-width: 0;
 }
 
 .btn-delete {
@@ -119,6 +152,7 @@ header h1 {
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
   cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .btn-add:hover {
@@ -136,6 +170,7 @@ header h1 {
   border-radius: 12px;
   padding: 1rem;
   margin-bottom: 1rem;
+  transition: border-color 0.3s ease;
 }
 
 .categorie-header {
@@ -153,16 +188,21 @@ header h1 {
   font-weight: 600;
   font-size: 1rem;
   min-width: 0;
+  background-color: #fff;
+  color: #1a1a1a;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .btn-add-small {
   background: #eee;
+  color: #333;
   border: none;
   border-radius: 8px;
   padding: 0.3rem 0.7rem;
   font-size: 0.8rem;
   cursor: pointer;
   margin-top: 0.3rem;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .bar-container {
@@ -203,3 +243,70 @@ header h1 {
 .dot.epargne { background: #9b59b6; }
 .dot.investissements { background: #2980b9; }
 .dot.reste { background: #2ecc71; }
+
+/* ==========================================================================
+   STYLES DU MODE NUIT (DARK MODE)
+   ========================================================================== */
+body.dark-mode {
+  background: #121212;
+  color: #e0e0e0;
+}
+
+body.dark-mode header h1 {
+  color: #ffffff;
+}
+
+body.dark-mode .btn-theme {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #f1f1f1;
+}
+
+body.dark-mode .card {
+  background: #1e1e1e;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .btn-person {
+  background: #2c2c2c;
+  color: #aaa;
+}
+
+body.dark-mode .btn-person.active {
+  background: #3b82f6;
+  color: #fff;
+}
+
+body.dark-mode input[type="text"],
+body.dark-mode input[type="number"] {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: #ffffff;
+}
+
+body.dark-mode input[type="text"]::placeholder,
+body.dark-mode input[type="number"]::placeholder {
+  color: #888;
+}
+
+body.dark-mode .categorie-block {
+  border-color: #333;
+}
+
+body.dark-mode .btn-add {
+  background: #3b82f6;
+  color: #fff;
+}
+
+body.dark-mode .btn-add:hover {
+  background: #2563eb;
+}
+
+body.dark-mode .btn-add-small {
+  background: #2c2c2c;
+  color: #ddd;
+}
+
+body.dark-mode .bar-container {
+  background: #333;
+}
