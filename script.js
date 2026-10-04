@@ -4,12 +4,22 @@ function nextId() {
   return idCounter;
 }
 
+function nouveauBudgetVide() {
+  return {
+    revenus: [],
+    investissements: [],
+    epargne: [],
+    depensesFixes: [],       // liste de catégories : [{id, nom, items: [...]}]
+    depensesVariables: []    // liste plate : [{id, nom, valeur}]
+  };
+}
+
 const data = {
-  revenus: [],
-  investissements: [],
-  epargne: [],
-  depenses: [] // chaque élément : { id, nom, items: [{id, nom, valeur}] }
+  Denis: nouveauBudgetVide(),
+  Margot: nouveauBudgetVide()
 };
+
+let currentPerson = "Denis";
 
 function createItem(nom = "", valeur = 0) {
   return { id: nextId(), nom, valeur };
@@ -19,6 +29,7 @@ function createItem(nom = "", valeur = 0) {
 function sauvegarder() {
   try {
     localStorage.setItem("budgetData", JSON.stringify(data));
+    localStorage.setItem("budgetCurrentPerson", currentPerson);
   } catch (e) {
     console.error("Erreur de sauvegarde :", e);
   }
@@ -29,18 +40,24 @@ function charger() {
     const sauvegarde = localStorage.getItem("budgetData");
     if (sauvegarde) {
       const parsed = JSON.parse(sauvegarde);
-      data.revenus = parsed.revenus || [];
-      data.investissements = parsed.investissements || [];
-      data.epargne = parsed.epargne || [];
-      data.depenses = parsed.depenses || [];
+      data.Denis = parsed.Denis || nouveauBudgetVide();
+      data.Margot = parsed.Margot || nouveauBudgetVide();
 
-      // recalcule idCounter pour éviter les doublons d'id
-      const tousLesIds = [
-        ...data.revenus.map(i => i.id),
-        ...data.investissements.map(i => i.id),
-        ...data.epargne.map(i => i.id),
-        ...data.depenses.flatMap(c => [c.id, ...c.items.map(i => i.id)])
-      ];
+      const personSauvegardee = localStorage.getItem("budgetCurrentPerson");
+      if (personSauvegardee === "Denis" || personSauvegardee === "Margot") {
+        currentPerson = personSauvegardee;
+      }
+
+      const tousLesIds = [];
+      [data.Denis, data.Margot].forEach(budget => {
+        tousLesIds.push(
+          ...budget.revenus.map(i => i.id),
+          ...budget.investissements.map(i => i.id),
+          ...budget.epargne.map(i => i.id),
+          ...budget.depensesFixes.flatMap(c => [c.id, ...c.items.map(i => i.id)]),
+          ...budget.depensesVariables.map(i => i.id)
+        );
+      });
       idCounter = tousLesIds.length ? Math.max(...tousLesIds) : 0;
       return true;
     }
@@ -50,12 +67,12 @@ function charger() {
   return false;
 }
 
-// --- Rendu d'une liste simple (revenus / investissements / épargne) ---
+// --- Rendu d'une liste plate (revenus / investissements / épargne / dépenses variables) ---
 function renderSimpleList(type) {
   const container = document.getElementById(`${type}-list`);
   container.innerHTML = "";
 
-  data[type].forEach(item => {
+  data[currentPerson][type].forEach(item => {
     const row = document.createElement("div");
     row.className = "item-row";
 
@@ -81,7 +98,7 @@ function renderSimpleList(type) {
     deleteBtn.className = "btn-delete";
     deleteBtn.textContent = "✕";
     deleteBtn.addEventListener("click", () => {
-      data[type] = data[type].filter(i => i.id !== item.id);
+      data[currentPerson][type] = data[currentPerson][type].filter(i => i.id !== item.id);
       renderSimpleList(type);
       updateTotals();
     });
@@ -93,12 +110,12 @@ function renderSimpleList(type) {
   });
 }
 
-// --- Rendu des dépenses (catégories + items dans chaque catégorie) ---
-function renderDepenses() {
-  const container = document.getElementById("depenses-categories");
+// --- Rendu des dépenses fixes (avec catégories) ---
+function renderDepensesFixes() {
+  const container = document.getElementById("depensesFixes-categories");
   container.innerHTML = "";
 
-  data.depenses.forEach(categorie => {
+  data[currentPerson].depensesFixes.forEach(categorie => {
     const block = document.createElement("div");
     block.className = "categorie-block";
 
@@ -118,8 +135,8 @@ function renderDepenses() {
     deleteCategorieBtn.className = "btn-delete";
     deleteCategorieBtn.textContent = "✕";
     deleteCategorieBtn.addEventListener("click", () => {
-      data.depenses = data.depenses.filter(c => c.id !== categorie.id);
-      renderDepenses();
+      data[currentPerson].depensesFixes = data[currentPerson].depensesFixes.filter(c => c.id !== categorie.id);
+      renderDepensesFixes();
       updateTotals();
     });
 
@@ -157,7 +174,7 @@ function renderDepenses() {
       itemDeleteBtn.textContent = "✕";
       itemDeleteBtn.addEventListener("click", () => {
         categorie.items = categorie.items.filter(i => i.id !== item.id);
-        renderDepenses();
+        renderDepensesFixes();
         updateTotals();
       });
 
@@ -174,7 +191,7 @@ function renderDepenses() {
     addItemBtn.textContent = "+ Ajouter une ligne";
     addItemBtn.addEventListener("click", () => {
       categorie.items.push(createItem());
-      renderDepenses();
+      renderDepensesFixes();
     });
     block.appendChild(addItemBtn);
 
@@ -187,16 +204,24 @@ function sumItems(list) {
   return list.reduce((acc, item) => acc + (item.valeur || 0), 0);
 }
 
+function sumCategories(categories) {
+  return categories.reduce((acc, cat) => acc + sumItems(cat.items), 0);
+}
+
 function updateTotals() {
-  const totalRevenus = sumItems(data.revenus);
-  const totalInvestissements = sumItems(data.investissements);
-  const totalEpargne = sumItems(data.epargne);
-  const totalDepenses = data.depenses.reduce((acc, cat) => acc + sumItems(cat.items), 0);
+  const budget = data[currentPerson];
+  const totalRevenus = sumItems(budget.revenus);
+  const totalInvestissements = sumItems(budget.investissements);
+  const totalEpargne = sumItems(budget.epargne);
+  const totalDepensesFixes = sumCategories(budget.depensesFixes);
+  const totalDepensesVariables = sumItems(budget.depensesVariables);
+  const totalDepenses = totalDepensesFixes + totalDepensesVariables;
 
   document.getElementById("total-revenus").textContent = `${totalRevenus.toFixed(2)} €`;
   document.getElementById("total-investissements").textContent = `${totalInvestissements.toFixed(2)} €`;
   document.getElementById("total-epargne").textContent = `${totalEpargne.toFixed(2)} €`;
-  document.getElementById("total-depenses").textContent = `${totalDepenses.toFixed(2)} €`;
+  document.getElementById("total-depensesFixes").textContent = `${totalDepensesFixes.toFixed(2)} €`;
+  document.getElementById("total-depensesVariables").textContent = `${totalDepensesVariables.toFixed(2)} €`;
 
   let pctDepenses = 0, pctEpargne = 0, pctInvestissements = 0, pctReste = 0;
 
@@ -220,37 +245,10 @@ function updateTotals() {
   sauvegarder();
 }
 
-// --- Boutons d'ajout ---
-document.getElementById("btn-add-revenu").addEventListener("click", () => {
-  data.revenus.push(createItem());
+// --- Rendu complet pour la personne active ---
+function renderAll() {
   renderSimpleList("revenus");
-});
-
-document.getElementById("btn-add-investissement").addEventListener("click", () => {
-  data.investissements.push(createItem());
   renderSimpleList("investissements");
-});
-
-document.getElementById("btn-add-epargne").addEventListener("click", () => {
-  data.epargne.push(createItem());
   renderSimpleList("epargne");
-});
-
-document.getElementById("btn-add-categorie").addEventListener("click", () => {
-  data.depenses.push({ id: nextId(), nom: "", items: [] });
-  renderDepenses();
-});
-
-// --- Initialisation : on charge les données sauvegardées, sinon valeurs par défaut ---
-const dejaSauvegarde = charger();
-
-if (!dejaSauvegarde) {
-  data.revenus.push(createItem("Salaire"));
-  data.depenses.push({ id: nextId(), nom: "Logement", items: [createItem("Loyer")] });
-}
-
-renderSimpleList("revenus");
-renderSimpleList("investissements");
-renderSimpleList("epargne");
-renderDepenses();
-updateTotals();
+  renderDepensesFixes();
+  renderSimpleList("depensesVariables");

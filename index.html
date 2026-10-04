@@ -12,6 +12,11 @@
       <h1>Simulateur de Budget</h1>
     </header>
 
+    <div class="person-switcher">
+      <button class="btn-person active" id="btn-person-denis" data-person="Denis">Denis</button>
+      <button class="btn-person" id="btn-person-margot" data-person="Margot">Margot</button>
+    </div>
+
     <section class="card revenus-card">
       <h2>💰 Revenus</h2>
       <div id="revenus-list" class="items-list"></div>
@@ -37,9 +42,16 @@
 
     <section class="card depenses-card">
       <h2>🧾 Dépenses fixes</h2>
-      <div id="depenses-categories"></div>
-      <button class="btn-add" id="btn-add-categorie">+ Ajouter une catégorie</button>
-      <div class="total-line">Total dépenses : <span id="total-depenses">0 €</span></div>
+      <div id="depensesFixes-categories"></div>
+      <button class="btn-add" id="btn-add-categorie-fixes">+ Ajouter une catégorie</button>
+      <div class="total-line">Total dépenses fixes : <span id="total-depensesFixes">0 €</span></div>
+    </section>
+
+    <section class="card depenses-card">
+      <h2>🧾 Dépenses variables</h2>
+      <div id="depensesVariables-list" class="items-list"></div>
+      <button class="btn-add" id="btn-add-depenseVariable">+ Ajouter une dépense</button>
+      <div class="total-line">Total dépenses variables : <span id="total-depensesVariables">0 €</span></div>
     </section>
 
     <section class="card summary-card">
