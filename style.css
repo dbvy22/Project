@@ -1,17 +1,178 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f4f6f8;
+  color: #1a1a1a;
+  margin: 0;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+header h1 {
   text-align: center;
-  margin-top: 4rem;
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: #111;
 }
 
-#valeur {
-  font-size: 4rem;
-  margin: 1rem 0;
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
-button {
+.card h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.item-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.item-row input[type="text"] {
+  flex: 2;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.item-row input[type="number"] {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.btn-delete {
+  background: none;
+  border: none;
+  color: #c0392b;
   font-size: 1.2rem;
-  padding: 0.5rem 1.2rem;
-  margin: 0 0.3rem;
+  cursor: pointer;
+  padding: 0 0.3rem;
+}
+
+.btn-add {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
 }
+
+.btn-add:hover {
+  background: #333;
+}
+
+.total-line {
+  margin-top: 1rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.categorie-block {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.categorie-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.categorie-header input[type="text"] {
+  flex: 1;
+  padding: 0.4rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.btn-add-small {
+  background: #eee;
+  border: none;
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-top: 0.3rem;
+}
+
+.bar-container {
+  display: flex;
+  height: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: #eee;
+}
+
+.bar-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.bar-segment.depenses { background: #e67e22; }
+.bar-segment.epargne { background: #9b59b6; }
+.bar-segment.investissements { background: #2980b9; }
+.bar-segment.reste { background: #2ecc71; }
+
+.legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.4rem;
+}
+
+.dot.depenses { background: #e67e22; }
+.dot.epargne { background: #9b59b6; }
+.dot.investissements { background: #2980b9; }
+.dot.reste { background: #2ecc71; }

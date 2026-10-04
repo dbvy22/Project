@@ -3,14 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mon premier site</title>
+  <title>Simulateur de Budget</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Compteur</h1>
-  <p id="valeur">0</p>
-  <button id="plus">+1</button>
-  <button id="reset">Reset</button>
+  <div class="container">
+    <header>
+      <h1>Simulateur de Budget</h1>
+    </header>
+
+    <section class="card revenus-card">
+      <h2>💰 Revenus</h2>
+      <div id="revenus-list" class="items-list"></div>
+      <button class="btn-add" id="btn-add-revenu">+ Ajouter un revenu</button>
+      <div class="total-line">Total revenus : <span id="total-revenus">0 €</span></div>
+    </section>
+
+    <div class="grid-2">
+      <section class="card investissements-card">
+        <h2>📈 Investissements</h2>
+        <div id="investissements-list" class="items-list"></div>
+        <button class="btn-add" id="btn-add-investissement">+ Ajouter</button>
+        <div class="total-line">Total : <span id="total-investissements">0 €</span></div>
+      </section>
+
+      <section class="card epargne-card">
+        <h2>🏦 Épargne</h2>
+        <div id="epargne-list" class="items-list"></div>
+        <button class="btn-add" id="btn-add-epargne">+ Ajouter</button>
+        <div class="total-line">Total : <span id="total-epargne">0 €</span></div>
+      </section>
+    </div>
+
+    <section class="card depenses-card">
+      <h2>🧾 Dépenses</h2>
+      <div id="depenses-categories"></div>
+      <button class="btn-add" id="btn-add-categorie">+ Ajouter une catégorie</button>
+      <div class="total-line">Total dépenses : <span id="total-depenses">0 €</span></div>
+    </section>
+
+    <section class="card summary-card">
+      <h2>Répartition des revenus</h2>
+      <div class="bar-container">
+        <div class="bar-segment depenses" id="bar-depenses"></div>
+        <div class="bar-segment epargne" id="bar-epargne"></div>
+        <div class="bar-segment investissements" id="bar-investissements"></div>
+        <div class="bar-segment reste" id="bar-reste"></div>
+      </div>
+      <div class="legend">
+        <div><span class="dot depenses"></span>Dépenses : <span id="pct-depenses">0%</span></div>
+        <div><span class="dot epargne"></span>Épargne : <span id="pct-epargne">0%</span></div>
+        <div><span class="dot investissements"></span>Investissements : <span id="pct-investissements">0%</span></div>
+        <div><span class="dot reste"></span>Reste disponible : <span id="pct-reste">0%</span></div>
+      </div>
+    </section>
+  </div>
 
   <script src="script.js"></script>
 </body>
