@@ -16,32 +16,35 @@ body {
   margin: 0 auto;
 }
 
-header {
-  position: relative;
+.top-bar {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
 }
 
-header h1 {
+.top-bar h1 {
   font-size: 1.8rem;
   margin: 0;
   color: #111;
+  transition: color 0.3s ease;
 }
 
 .btn-theme {
-  position: absolute;
-  right: 0;
-  background: #eee;
+  background: #ffffff;
   border: 1px solid #ddd;
   border-radius: 20px;
-  padding: 0.4rem 0.9rem;
+  padding: 0.5rem 1rem;
   font-size: 0.85rem;
   cursor: pointer;
   font-weight: 600;
   color: #333;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
   transition: all 0.3s ease;
+}
+
+.btn-theme:hover {
+  background: #f0f0f0;
 }
 
 .person-switcher {
@@ -91,13 +94,6 @@ header h1 {
 @media (max-width: 600px) {
   .grid-2 {
     grid-template-columns: 1fr;
-  }
-  header {
-    flex-direction: column;
-    gap: 0.8rem;
-  }
-  .btn-theme {
-    position: static;
   }
 }
 
@@ -244,58 +240,56 @@ header h1 {
 .dot.investissements { background: #2980b9; }
 .dot.reste { background: #2ecc71; }
 
-/* ==========================================================================
-   STYLES DU MODE NUIT (DARK MODE)
-   ========================================================================== */
+/* --- STYLES MODE NUIT --- */
 body.dark-mode {
-  background: #121212;
-  color: #e0e0e0;
+  background: #18181b;
+  color: #f4f4f5;
 }
 
-body.dark-mode header h1 {
+body.dark-mode .top-bar h1 {
   color: #ffffff;
 }
 
 body.dark-mode .btn-theme {
-  background: #2a2a2a;
-  border-color: #444;
-  color: #f1f1f1;
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #f4f4f5;
 }
 
 body.dark-mode .card {
-  background: #1e1e1e;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  background: #27272a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 body.dark-mode .btn-person {
-  background: #2c2c2c;
-  color: #aaa;
+  background: #3f3f46;
+  color: #a1a1aa;
 }
 
 body.dark-mode .btn-person.active {
   background: #3b82f6;
-  color: #fff;
+  color: #ffffff;
 }
 
 body.dark-mode input[type="text"],
 body.dark-mode input[type="number"] {
-  background-color: #2a2a2a;
-  border-color: #444;
+  background-color: #18181b;
+  border-color: #3f3f46;
   color: #ffffff;
 }
 
 body.dark-mode input[type="text"]::placeholder,
 body.dark-mode input[type="number"]::placeholder {
-  color: #888;
+  color: #71717a;
 }
 
 body.dark-mode .categorie-block {
-  border-color: #333;
+  border-color: #3f3f46;
 }
 
 body.dark-mode .btn-add {
   background: #3b82f6;
-  color: #fff;
+  color: #ffffff;
 }
 
 body.dark-mode .btn-add:hover {
@@ -303,10 +297,10 @@ body.dark-mode .btn-add:hover {
 }
 
 body.dark-mode .btn-add-small {
-  background: #2c2c2c;
-  color: #ddd;
+  background: #3f3f46;
+  color: #e4e4e7;
 }
 
 body.dark-mode .bar-container {
-  background: #333;
+  background: #3f3f46;
 }

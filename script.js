@@ -352,19 +352,20 @@ document.getElementById("btn-add-depenseVariable").addEventListener("click", () 
 // Lancer l'écoute en temps réel Firebase au démarrage
 ecouterFirebase();
 
-// --- Gestion du Mode Nuit (Theme Sombre) ---
+// --- Mode Nuit ---
 const themeToggleBtn = document.getElementById("theme-toggle");
 const currentTheme = localStorage.getItem("budgetTheme");
 
 if (currentTheme === "dark") {
   document.body.classList.add("dark-mode");
-  themeToggleBtn.textContent = "☀️ Mode Jour";
+  if (themeToggleBtn) themeToggleBtn.textContent = "☀️ Mode Jour";
 }
 
-themeToggleBtn.addEventListener("click", () => {
-  document.body.classList.toggle("dark-mode");
-  const isDarkMode = document.body.classList.contains("dark-mode");
-  
-  themeToggleBtn.textContent = isDarkMode ? "☀️ Mode Jour" : "🌙 Mode Nuit";
-  localStorage.setItem("budgetTheme", isDarkMode ? "dark" : "light");
-});
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+    const isDarkMode = document.body.classList.contains("dark-mode");
+    themeToggleBtn.textContent = isDarkMode ? "☀️ Mode Jour" : "🌙 Mode Nuit";
+    localStorage.setItem("budgetTheme", isDarkMode ? "dark" : "light");
+  });
+}
