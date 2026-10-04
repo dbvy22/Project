@@ -1,3 +1,22 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+// --- Configuration Firebase ---
+const firebaseConfig = {
+  apiKey: "AIzaSyCeKKMikw6mo4Ck1OYqLl4DbL9HaFdf3Xs",
+  authDomain: "simulateur-7566e.firebaseapp.com",
+  projectId: "simulateur-7566e",
+  storageBucket: "simulateur-7566e.firebasestorage.app",
+  messagingSenderId: "208551207652",
+  appId: "1:208551207652:web:5d4176ba23f50267d802f1",
+  measurementId: "G-S0J7Y3YH0P"
+};
+
+// Initialisation de Firebase & Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const budgetDocRef = doc(db, "budgets", "mainData");
+
 let idCounter = 0;
 function nextId() {
   idCounter++;
@@ -14,7 +33,7 @@ function nouveauBudgetVide() {
   };
 }
 
-const data = {
+let data = {
   Denis: nouveauBudgetVide(),
   Margot: nouveauBudgetVide()
 };
@@ -25,29 +44,39 @@ function createItem(nom = "", valeur = 0) {
   return { id: nextId(), nom, valeur };
 }
 
-// --- Sauvegarde / chargement dans le navigateur ---
-function sauvegarder() {
+// Variable de verrouillage pour éviter les boucles d'envoi infinies
+let isUpdatingFromFirebase = false;
+
+// --- Sauvegarde dans Firebase Firestore ---
+async function sauvegarder() {
+  if (isUpdatingFromFirebase) return;
   try {
-    localStorage.setItem("budgetData", JSON.stringify(data));
-    localStorage.setItem("budgetCurrentPerson", currentPerson);
+    await setDoc(budgetDocRef, {
+      data: data,
+      currentPerson: currentPerson
+    });
   } catch (e) {
-    console.error("Erreur de sauvegarde :", e);
+    console.error("Erreur de sauvegarde Firebase :", e);
   }
 }
 
-function charger() {
-  try {
-    const sauvegarde = localStorage.getItem("budgetData");
-    if (sauvegarde) {
-      const parsed = JSON.parse(sauvegarde);
-      data.Denis = parsed.Denis || nouveauBudgetVide();
-      data.Margot = parsed.Margot || nouveauBudgetVide();
+// --- Écoute en temps réel des modifications Firebase ---
+function ecouterFirebase() {
+  onSnapshot(budgetDocRef, (snapshot) => {
+    if (snapshot.exists()) {
+      isUpdatingFromFirebase = true;
+      const docData = snapshot.data();
 
-      const personSauvegardee = localStorage.getItem("budgetCurrentPerson");
-      if (personSauvegardee === "Denis" || personSauvegardee === "Margot") {
-        currentPerson = personSauvegardee;
+      if (docData.data) {
+        data.Denis = docData.data.Denis || nouveauBudgetVide();
+        data.Margot = docData.data.Margot || nouveauBudgetVide();
       }
 
+      if (docData.currentPerson === "Denis" || docData.currentPerson === "Margot") {
+        currentPerson = docData.currentPerson;
+      }
+
+      // Recalculer le compteur d'IDs max
       const tousLesIds = [];
       [data.Denis, data.Margot].forEach(budget => {
         tousLesIds.push(
@@ -59,12 +88,24 @@ function charger() {
         );
       });
       idCounter = tousLesIds.length ? Math.max(...tousLesIds) : 0;
-      return true;
+
+      // Mettre à jour les boutons de personne
+      document.querySelectorAll(".btn-person").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.person === currentPerson);
+      });
+
+      renderAllUI();
+      isUpdatingFromFirebase = false;
+    } else {
+      // Premier lancement : créer le document par défaut s'il n'existe pas encore
+      data.Denis.revenus.push(createItem("Salaire"));
+      data.Denis.depensesFixes.push({ id: nextId(), nom: "Logement", items: [createItem("Loyer")] });
+      data.Denis.depensesVariables.push(createItem("Courses"));
+      sauvegarder();
     }
-  } catch (e) {
-    console.error("Erreur de chargement :", e);
-  }
-  return false;
+  }, (error) => {
+    console.error("Erreur d'écoute Firebase :", error);
+  });
 }
 
 // --- Rendu d'une liste plate (revenus / investissements / épargne / dépenses variables) ---
@@ -221,7 +262,7 @@ function updateTotals() {
   document.getElementById("total-investissements").textContent = `${totalInvestissements.toFixed(2)} €`;
   document.getElementById("total-epargne").textContent = `${totalEpargne.toFixed(2)} €`;
   document.getElementById("total-depensesFixes").textContent = `${totalDepensesFixes.toFixed(2)} €`;
-  document.getElementById("total-depensesVariables").textContent = `${totalDepensesVariables.toFixed(2)} €`;
+  document.getElementById("total-depensesVariables").textContent = `${totalDepensesVariables.textContent = totalDepensesVariables.toFixed(2)} €`;
 
   let pctDepenses = 0, pctEpargne = 0, pctInvestissements = 0, pctReste = 0;
 
@@ -245,14 +286,47 @@ function updateTotals() {
   sauvegarder();
 }
 
-// --- Rendu complet pour la personne active ---
-function renderAll() {
+// --- Rendu complet pour l'affichage ---
+function renderAllUI() {
   renderSimpleList("revenus");
   renderSimpleList("investissements");
   renderSimpleList("epargne");
   renderDepensesFixes();
   renderSimpleList("depensesVariables");
-  updateTotals();
+  
+  // Mettre à jour les totaux sans redéclencher sauvegarder() inutilement
+  const budget = data[currentPerson];
+  const totalRevenus = sumItems(budget.revenus);
+  const totalInvestissements = sumItems(budget.investissements);
+  const totalEpargne = sumItems(budget.epargne);
+  const totalDepensesFixes = sumCategories(budget.depensesFixes);
+  const totalDepensesVariables = sumItems(budget.depensesVariables);
+  const totalDepenses = totalDepensesFixes + totalDepensesVariables;
+
+  document.getElementById("total-revenus").textContent = `${totalRevenus.toFixed(2)} €`;
+  document.getElementById("total-investissements").textContent = `${totalInvestissements.toFixed(2)} €`;
+  document.getElementById("total-epargne").textContent = `${totalEpargne.toFixed(2)} €`;
+  document.getElementById("total-depensesFixes").textContent = `${totalDepensesFixes.toFixed(2)} €`;
+  document.getElementById("total-depensesVariables").textContent = `${totalDepensesVariables.toFixed(2)} €`;
+
+  let pctDepenses = 0, pctEpargne = 0, pctInvestissements = 0, pctReste = 0;
+
+  if (totalRevenus > 0) {
+    pctDepenses = (totalDepenses / totalRevenus) * 100;
+    pctEpargne = (totalEpargne / totalRevenus) * 100;
+    pctInvestissements = (totalInvestissements / totalRevenus) * 100;
+    pctReste = Math.max(0, 100 - pctDepenses - pctEpargne - pctInvestissements);
+  }
+
+  document.getElementById("bar-depenses").style.width = `${pctDepenses}%`;
+  document.getElementById("bar-epargne").style.width = `${pctEpargne}%`;
+  document.getElementById("bar-investissements").style.width = `${pctInvestissements}%`;
+  document.getElementById("bar-reste").style.width = `${pctReste}%`;
+
+  document.getElementById("pct-depenses").textContent = `${pctDepenses.toFixed(1)}%`;
+  document.getElementById("pct-epargne").textContent = `${pctEpargne.toFixed(1)}%`;
+  document.getElementById("pct-investissements").textContent = `${pctInvestissements.toFixed(1)}%`;
+  document.getElementById("pct-reste").textContent = `${pctReste.toFixed(1)}%`;
 }
 
 // --- Changement de personne ---
@@ -261,7 +335,7 @@ function switchPerson(person) {
   document.querySelectorAll(".btn-person").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.person === person);
   });
-  renderAll();
+  renderAllUI();
   sauvegarder();
 }
 
@@ -294,17 +368,5 @@ document.getElementById("btn-add-depenseVariable").addEventListener("click", () 
   renderSimpleList("depensesVariables");
 });
 
-// --- Initialisation ---
-const dejaSauvegarde = charger();
-
-if (!dejaSauvegarde) {
-  data.Denis.revenus.push(createItem("Salaire"));
-  data.Denis.depensesFixes.push({ id: nextId(), nom: "Logement", items: [createItem("Loyer")] });
-  data.Denis.depensesVariables.push(createItem("Courses"));
-}
-
-document.querySelectorAll(".btn-person").forEach(btn => {
-  btn.classList.toggle("active", btn.dataset.person === currentPerson);
-});
-
-renderAll();
+// Lancer l'écoute en temps réel Firebase au démarrage
+ecouterFirebase();
