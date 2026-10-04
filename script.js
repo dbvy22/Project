@@ -44,7 +44,7 @@ function createItem(nom = "", valeur = 0) {
   return { id: nextId(), nom, valeur };
 }
 
-// Variable de verrouillage pour éviter les boucles d'envoi infinies
+// Empecher les sauvegardes déclenchées par la mise à jour depuis Firebase
 let isUpdatingFromFirebase = false;
 
 // --- Sauvegarde dans Firebase Firestore ---
@@ -64,6 +64,11 @@ async function sauvegarder() {
 function ecouterFirebase() {
   onSnapshot(budgetDocRef, (snapshot) => {
     if (snapshot.exists()) {
+      // Si l'utilisateur est en train de taper dans un champ, on ne régénère pas l'UI pour ne pas perdre le focus / fermer le clavier
+      if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+        return;
+      }
+
       isUpdatingFromFirebase = true;
       const docData = snapshot.data();
 
@@ -97,7 +102,7 @@ function ecouterFirebase() {
       renderAllUI();
       isUpdatingFromFirebase = false;
     } else {
-      // Premier lancement : créer le document par défaut s'il n'existe pas encore
+      // Premier lancement : créer le document par défaut
       data.Denis.revenus.push(createItem("Salaire"));
       data.Denis.depensesFixes.push({ id: nextId(), nom: "Logement", items: [createItem("Loyer")] });
       data.Denis.depensesVariables.push(createItem("Courses"));
@@ -123,7 +128,7 @@ function renderSimpleList(type) {
     nomInput.value = item.nom;
     nomInput.addEventListener("input", () => {
       item.nom = nomInput.value;
-      sauvegarder();
+      sauvegarder(); // Enregistre en tâche de fond sans reconstruire l'UI
     });
 
     const valeurInput = document.createElement("input");
@@ -132,7 +137,7 @@ function renderSimpleList(type) {
     valeurInput.value = item.valeur || "";
     valeurInput.addEventListener("input", () => {
       item.valeur = parseFloat(valeurInput.value) || 0;
-      updateTotals();
+      updateTotalsOnly(); // Calcule uniquement les totaux sans reconstruire l'UI
     });
 
     const deleteBtn = document.createElement("button");
@@ -141,7 +146,8 @@ function renderSimpleList(type) {
     deleteBtn.addEventListener("click", () => {
       data[currentPerson][type] = data[currentPerson][type].filter(i => i.id !== item.id);
       renderSimpleList(type);
-      updateTotals();
+      updateTotalsOnly();
+      sauvegarder();
     });
 
     row.appendChild(nomInput);
@@ -178,7 +184,8 @@ function renderDepensesFixes() {
     deleteCategorieBtn.addEventListener("click", () => {
       data[currentPerson].depensesFixes = data[currentPerson].depensesFixes.filter(c => c.id !== categorie.id);
       renderDepensesFixes();
-      updateTotals();
+      updateTotalsOnly();
+      sauvegarder();
     });
 
     header.appendChild(nomInput);
@@ -207,7 +214,7 @@ function renderDepensesFixes() {
       itemValeurInput.value = item.valeur || "";
       itemValeurInput.addEventListener("input", () => {
         item.valeur = parseFloat(itemValeurInput.value) || 0;
-        updateTotals();
+        updateTotalsOnly();
       });
 
       const itemDeleteBtn = document.createElement("button");
@@ -216,7 +223,8 @@ function renderDepensesFixes() {
       itemDeleteBtn.addEventListener("click", () => {
         categorie.items = categorie.items.filter(i => i.id !== item.id);
         renderDepensesFixes();
-        updateTotals();
+        updateTotalsOnly();
+        sauvegarder();
       });
 
       row.appendChild(itemNomInput);
@@ -233,6 +241,7 @@ function renderDepensesFixes() {
     addItemBtn.addEventListener("click", () => {
       categorie.items.push(createItem());
       renderDepensesFixes();
+      sauvegarder();
     });
     block.appendChild(addItemBtn);
 
@@ -249,52 +258,7 @@ function sumCategories(categories) {
   return categories.reduce((acc, cat) => acc + sumItems(cat.items), 0);
 }
 
-function updateTotals() {
-  const budget = data[currentPerson];
-  const totalRevenus = sumItems(budget.revenus);
-  const totalInvestissements = sumItems(budget.investissements);
-  const totalEpargne = sumItems(budget.epargne);
-  const totalDepensesFixes = sumCategories(budget.depensesFixes);
-  const totalDepensesVariables = sumItems(budget.depensesVariables);
-  const totalDepenses = totalDepensesFixes + totalDepensesVariables;
-
-  document.getElementById("total-revenus").textContent = `${totalRevenus.toFixed(2)} €`;
-  document.getElementById("total-investissements").textContent = `${totalInvestissements.toFixed(2)} €`;
-  document.getElementById("total-epargne").textContent = `${totalEpargne.toFixed(2)} €`;
-  document.getElementById("total-depensesFixes").textContent = `${totalDepensesFixes.toFixed(2)} €`;
-  document.getElementById("total-depensesVariables").textContent = `${totalDepensesVariables.textContent = totalDepensesVariables.toFixed(2)} €`;
-
-  let pctDepenses = 0, pctEpargne = 0, pctInvestissements = 0, pctReste = 0;
-
-  if (totalRevenus > 0) {
-    pctDepenses = (totalDepenses / totalRevenus) * 100;
-    pctEpargne = (totalEpargne / totalRevenus) * 100;
-    pctInvestissements = (totalInvestissements / totalRevenus) * 100;
-    pctReste = Math.max(0, 100 - pctDepenses - pctEpargne - pctInvestissements);
-  }
-
-  document.getElementById("bar-depenses").style.width = `${pctDepenses}%`;
-  document.getElementById("bar-epargne").style.width = `${pctEpargne}%`;
-  document.getElementById("bar-investissements").style.width = `${pctInvestissements}%`;
-  document.getElementById("bar-reste").style.width = `${pctReste}%`;
-
-  document.getElementById("pct-depenses").textContent = `${pctDepenses.toFixed(1)}%`;
-  document.getElementById("pct-epargne").textContent = `${pctEpargne.toFixed(1)}%`;
-  document.getElementById("pct-investissements").textContent = `${pctInvestissements.toFixed(1)}%`;
-  document.getElementById("pct-reste").textContent = `${pctReste.toFixed(1)}%`;
-
-  sauvegarder();
-}
-
-// --- Rendu complet pour l'affichage ---
-function renderAllUI() {
-  renderSimpleList("revenus");
-  renderSimpleList("investissements");
-  renderSimpleList("epargne");
-  renderDepensesFixes();
-  renderSimpleList("depensesVariables");
-  
-  // Mettre à jour les totaux sans redéclencher sauvegarder() inutilement
+function updateTotalsOnly() {
   const budget = data[currentPerson];
   const totalRevenus = sumItems(budget.revenus);
   const totalInvestissements = sumItems(budget.investissements);
@@ -327,6 +291,18 @@ function renderAllUI() {
   document.getElementById("pct-epargne").textContent = `${pctEpargne.toFixed(1)}%`;
   document.getElementById("pct-investissements").textContent = `${pctInvestissements.toFixed(1)}%`;
   document.getElementById("pct-reste").textContent = `${pctReste.toFixed(1)}%`;
+
+  sauvegarder();
+}
+
+// --- Rendu complet pour l'affichage ---
+function renderAllUI() {
+  renderSimpleList("revenus");
+  renderSimpleList("investissements");
+  renderSimpleList("epargne");
+  renderDepensesFixes();
+  renderSimpleList("depensesVariables");
+  updateTotalsOnly();
 }
 
 // --- Changement de personne ---
@@ -346,26 +322,31 @@ document.getElementById("btn-person-margot").addEventListener("click", () => swi
 document.getElementById("btn-add-revenu").addEventListener("click", () => {
   data[currentPerson].revenus.push(createItem());
   renderSimpleList("revenus");
+  sauvegarder();
 });
 
 document.getElementById("btn-add-investissement").addEventListener("click", () => {
   data[currentPerson].investissements.push(createItem());
   renderSimpleList("investissements");
+  sauvegarder();
 });
 
 document.getElementById("btn-add-epargne").addEventListener("click", () => {
   data[currentPerson].epargne.push(createItem());
   renderSimpleList("epargne");
+  sauvegarder();
 });
 
 document.getElementById("btn-add-categorie-fixes").addEventListener("click", () => {
   data[currentPerson].depensesFixes.push({ id: nextId(), nom: "", items: [] });
   renderDepensesFixes();
+  sauvegarder();
 });
 
 document.getElementById("btn-add-depenseVariable").addEventListener("click", () => {
   data[currentPerson].depensesVariables.push(createItem());
   renderSimpleList("depensesVariables");
+  sauvegarder();
 });
 
 // Lancer l'écoute en temps réel Firebase au démarrage
