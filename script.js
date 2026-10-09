@@ -264,7 +264,7 @@ function sumCategories(categories) {
 function renderBudgetChart(budget) {
   const svg = document.getElementById("budget-chart");
   const svgNamespace = "http://www.w3.org/2000/svg";
-  const palette = ["#edb0bd", "#c5b7f2", "#b4d1d2", "#f2d2b8", "#d5b4cf", "#b9c8f4"];
+  const palette = ["#a889f3", "#438cff", "#35cbb8", "#8b79e8", "#42bfc7", "#6a9ff2"];
   const formatMontant = valeur => `${valeur.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} €`;
   const makeSvgElement = (name, attributes = {}) => {
     const element = document.createElementNS(svgNamespace, name);
@@ -324,7 +324,7 @@ function renderBudgetChart(budget) {
       nom: "Reste disponible",
       valeur: resteDisponible,
       details: [{ nom: "Disponible", valeur: resteDisponible }],
-      couleur: "#a8d8b5"
+      couleur: "#32c9a8"
     });
   }
 
@@ -426,8 +426,8 @@ function renderBudgetChart(budget) {
       x, y, width: 8, height: Math.max(nodeHeight, 4), fill: color, class: "chart-node"
     }));
   };
-  addNode(28, revenueY, revenuHauteur, "#b9c8f4");
-  addNode(189, budgetY, revenuHauteur, "#f2d2b8");
+  addNode(28, revenueY, revenuHauteur, "#438cff");
+  addNode(189, budgetY, revenuHauteur, "#36cbb8");
   addLabel(nodes, "Revenus", 42, hauteur / 2 - 4, "start", "chart-label");
   addLabel(nodes, formatMontant(totalRevenus), 42, hauteur / 2 + 16, "start", "chart-value");
   addLabel(nodes, "Budget", 176, hauteur / 2 - 4, "end", "chart-label");
