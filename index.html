@@ -56,18 +56,11 @@
     </section>
 
     <section class="card summary-card">
-      <h2>Répartition des revenus</h2>
-      <div class="bar-container">
-        <div class="bar-segment depenses" id="bar-depenses"></div>
-        <div class="bar-segment epargne" id="bar-epargne"></div>
-        <div class="bar-segment investissements" id="bar-investissements"></div>
-        <div class="bar-segment reste" id="bar-reste"></div>
-      </div>
-      <div class="legend">
-        <div><span class="dot depenses"></span>Dépenses : <span id="pct-depenses">0%</span></div>
-        <div><span class="dot epargne"></span>Épargne : <span id="pct-epargne">0%</span></div>
-        <div><span class="dot investissements"></span>Investissements : <span id="pct-investissements">0%</span></div>
-        <div><span class="dot reste"></span>Reste disponible : <span id="pct-reste">0%</span></div>
+      <h2>Flux du budget mensuel</h2>
+      <div class="budget-chart-scroll">
+        <svg id="budget-chart" class="budget-chart" role="img" aria-label="Diagramme des revenus et de leur répartition">
+          <text class="chart-empty" x="50%" y="50%" text-anchor="middle">Ajoutez des montants pour afficher la répartition de votre budget.</text>
+        </svg>
       </div>
     </section>
   </div>

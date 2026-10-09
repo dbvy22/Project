@@ -128,6 +128,7 @@ function renderSimpleList(type) {
     nomInput.value = item.nom;
     nomInput.addEventListener("input", () => {
       item.nom = nomInput.value;
+      renderBudgetChart(data[currentPerson]);
       sauvegarder(); // Enregistre en tâche de fond sans reconstruire l'UI
     });
 
@@ -175,6 +176,7 @@ function renderDepensesFixes() {
     nomInput.value = categorie.nom;
     nomInput.addEventListener("input", () => {
       categorie.nom = nomInput.value;
+      renderBudgetChart(data[currentPerson]);
       sauvegarder();
     });
 
@@ -205,6 +207,7 @@ function renderDepensesFixes() {
       itemNomInput.value = item.nom;
       itemNomInput.addEventListener("input", () => {
         item.nom = itemNomInput.value;
+        renderBudgetChart(data[currentPerson]);
         sauvegarder();
       });
 
@@ -258,6 +261,191 @@ function sumCategories(categories) {
   return categories.reduce((acc, cat) => acc + sumItems(cat.items), 0);
 }
 
+function renderBudgetChart(budget) {
+  const svg = document.getElementById("budget-chart");
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  const palette = ["#edb0bd", "#c5b7f2", "#b4d1d2", "#f2d2b8", "#d5b4cf", "#b9c8f4"];
+  const formatMontant = valeur => `${valeur.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} €`;
+  const makeSvgElement = (name, attributes = {}) => {
+    const element = document.createElementNS(svgNamespace, name);
+    Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+    return element;
+  };
+  const addLabel = (parent, text, x, y, anchor, className) => {
+    const label = makeSvgElement("text", { x, y, "text-anchor": anchor, class: className });
+    label.textContent = text;
+    parent.appendChild(label);
+    return label;
+  };
+  const addValueLabel = (parent, text, fullText, x, y, maxWidth, amount, maxAmount) => {
+    const fontSize = Math.min(16, 11.5 + Math.sqrt(amount / maxAmount) * 4.5);
+    const labelGroup = makeSvgElement("g");
+    parent.appendChild(labelGroup);
+    const label = addLabel(labelGroup, text, x, y, "middle", "chart-label");
+    label.style.fontSize = `${fontSize}px`;
+    while (label.getComputedTextLength() > maxWidth && label.textContent.length > 4) {
+      label.textContent = `${label.textContent.slice(0, -2)}…`;
+    }
+    const title = makeSvgElement("title");
+    title.textContent = fullText;
+    label.appendChild(title);
+    const bounds = label.getBBox();
+    labelGroup.appendChild(makeSvgElement("rect", {
+      x: bounds.x - 8,
+      y: bounds.y - 4,
+      width: bounds.width + 16,
+      height: bounds.height + 8,
+      rx: 6,
+      class: "chart-label-bg"
+    }));
+    labelGroup.insertBefore(labelGroup.querySelector("rect"), label);
+  };
+  const groups = [];
+  const addGroup = (nom, items, couleur) => {
+    const details = items
+      .filter(item => item.valeur > 0)
+      .map(item => ({ nom: item.nom.trim() || "Sans nom", valeur: item.valeur }));
+    const valeur = details.reduce((total, item) => total + item.valeur, 0);
+    if (valeur > 0) groups.push({ nom, valeur, details, couleur });
+  };
+
+  addGroup("Investissements", budget.investissements, palette[0]);
+  addGroup("Épargne", budget.epargne, palette[1]);
+  budget.depensesFixes.forEach((categorie, index) => {
+    addGroup(categorie.nom.trim() || "Sans catégorie", categorie.items, palette[(index + 2) % palette.length]);
+  });
+  addGroup("Dépenses variables", budget.depensesVariables, palette[2]);
+
+  const totalRevenus = sumItems(budget.revenus);
+  const montantAffecte = groups.reduce((total, group) => total + group.valeur, 0);
+  const resteDisponible = Math.max(0, totalRevenus - montantAffecte);
+  if (resteDisponible > 0) {
+    groups.push({
+      nom: "Reste disponible",
+      valeur: resteDisponible,
+      details: [{ nom: "Disponible", valeur: resteDisponible }],
+      couleur: "#a8d8b5"
+    });
+  }
+
+  const maxLabelAmount = groups.reduce((max, group) =>
+    group.details.reduce((detailMax, detail) => Math.max(detailMax, detail.valeur), Math.max(max, group.valeur)), 1);
+  const nombreDetails = groups.reduce((total, group) => total + group.details.length, 0);
+  const nombreNoeuds = Math.max(1, nombreDetails, groups.length);
+  const hauteur = Math.max(300, nombreNoeuds * 34 + 64);
+  const margeVerticale = 24;
+  const totalAffecte = groups.reduce((total, group) => total + group.valeur, 0);
+  const montantMax = Math.max(totalRevenus, totalAffecte, 1);
+  const hauteurDisponible = hauteur - margeVerticale * 2;
+  const hauteurMinimaleLibelle = 28;
+  const groupesDetails = groups.flatMap((group, groupIndex) =>
+    group.details.map(detail => ({ ...detail, groupIndex }))
+  );
+  const hauteurTotaleNoeuds = (noeuds, echelleCandidate) =>
+    noeuds.reduce((total, noeud) => total + Math.max(noeud.valeur * echelleCandidate, hauteurMinimaleLibelle), 0);
+  let echelleMin = 0;
+  let echelleMax = hauteurDisponible / montantMax;
+  for (let iteration = 0; iteration < 32; iteration++) {
+    const echelleCandidate = (echelleMin + echelleMax) / 2;
+    const tientDansGraphique = hauteurTotaleNoeuds(groups, echelleCandidate) <= hauteurDisponible
+      && hauteurTotaleNoeuds(groupesDetails, echelleCandidate) <= hauteurDisponible;
+    if (tientDansGraphique) echelleMin = echelleCandidate;
+    else echelleMax = echelleCandidate;
+  }
+  const echelle = echelleMin;
+  const revenuHauteur = Math.max(totalRevenus * echelle, totalRevenus > 0 ? 4 : 0);
+  const budgetY = (hauteur - revenuHauteur) / 2;
+  const positionsGroupes = [];
+  const positionsDetails = [];
+  const placerNoeuds = (noeuds, listePositions) => {
+    const hauteurTotale = hauteurTotaleNoeuds(noeuds, echelle);
+    let y = (hauteur - hauteurTotale) / 2;
+    noeuds.forEach(noeud => {
+      const nodeHeight = noeud.valeur * echelle;
+      const slotHeight = Math.max(nodeHeight, hauteurMinimaleLibelle);
+      listePositions.push({ ...noeud, y: y + (slotHeight - nodeHeight) / 2, hauteur: nodeHeight });
+      y += slotHeight;
+    });
+  };
+
+  placerNoeuds(groups, positionsGroupes);
+  placerNoeuds(groupesDetails.map(detail => ({
+    ...detail,
+    couleur: groups[detail.groupIndex].couleur
+  })), positionsDetails);
+
+  svg.replaceChildren();
+  svg.setAttribute("viewBox", `0 0 700 ${hauteur}`);
+  svg.setAttribute("height", hauteur);
+
+  if (totalRevenus <= 0 && totalAffecte <= 0) {
+    const emptyText = makeSvgElement("text", {
+      x: "50%", y: "50%", "text-anchor": "middle", class: "chart-empty"
+    });
+    emptyText.textContent = "Ajoutez des montants pour afficher la répartition de votre budget.";
+    svg.appendChild(emptyText);
+    return;
+  }
+
+  const links = makeSvgElement("g");
+  const nodes = makeSvgElement("g");
+  svg.append(links, nodes);
+  const pathForFlow = (x1, y1, x2, y2, flowHeight) => {
+    const curve = (x2 - x1) * 0.48;
+    return `M ${x1} ${y1} C ${x1 + curve} ${y1}, ${x2 - curve} ${y2}, ${x2} ${y2} L ${x2} ${y2 + flowHeight} C ${x2 - curve} ${y2 + flowHeight}, ${x1 + curve} ${y1 + flowHeight}, ${x1} ${y1 + flowHeight} Z`;
+  };
+  const addFlow = (x1, y1, x2, y2, amount, color) => {
+    if (amount <= 0) return;
+    links.appendChild(makeSvgElement("path", {
+      d: pathForFlow(x1, y1, x2, y2, amount * echelle),
+      fill: color,
+      class: "chart-flow"
+    }));
+  };
+
+  const revenueY = (hauteur - revenuHauteur) / 2;
+  addFlow(35, revenueY, 189, budgetY, totalRevenus, "#b9c8f4");
+  let revenueOffset = 0;
+  positionsGroupes.forEach(group => {
+    addFlow(196, budgetY + revenueOffset, 390, group.y, group.valeur, group.couleur);
+    revenueOffset += group.valeur * echelle;
+  });
+
+  const offsetsDetails = new Map();
+  positionsGroupes.forEach((group, groupIndex) => offsetsDetails.set(groupIndex, 0));
+  positionsDetails.forEach(detail => {
+    const group = positionsGroupes[detail.groupIndex];
+    const offset = offsetsDetails.get(detail.groupIndex);
+    addFlow(397, group.y + offset, 490, detail.y, detail.valeur, detail.couleur);
+    offsetsDetails.set(detail.groupIndex, offset + detail.valeur * echelle);
+  });
+
+  const addNode = (x, y, nodeHeight, color) => {
+    if (nodeHeight <= 0) return;
+    nodes.appendChild(makeSvgElement("rect", {
+      x, y, width: 8, height: Math.max(nodeHeight, 4), fill: color, class: "chart-node"
+    }));
+  };
+  addNode(28, revenueY, revenuHauteur, "#b9c8f4");
+  addNode(189, budgetY, revenuHauteur, "#f2d2b8");
+  addLabel(nodes, "Revenus", 42, hauteur / 2 - 4, "start", "chart-label");
+  addLabel(nodes, formatMontant(totalRevenus), 42, hauteur / 2 + 16, "start", "chart-value");
+  addLabel(nodes, "Budget", 176, hauteur / 2 - 4, "end", "chart-label");
+  addLabel(nodes, formatMontant(totalRevenus), 176, hauteur / 2 + 16, "end", "chart-value");
+
+  positionsGroupes.forEach(group => {
+    addNode(390, group.y, group.hauteur, group.couleur);
+    const montant = formatMontant(group.valeur);
+    addValueLabel(nodes, `${group.nom} : ${montant}`, `${group.nom} : ${montant}`, 294, group.y + group.hauteur / 2, 176, group.valeur, maxLabelAmount);
+  });
+  positionsDetails.forEach(detail => {
+    addNode(490, detail.y, detail.hauteur, detail.couleur);
+    const montant = formatMontant(detail.valeur);
+    addValueLabel(nodes, `${detail.nom} : ${montant}`, `${detail.nom} : ${montant}`, 592, detail.y + detail.hauteur / 2, 184, detail.valeur, maxLabelAmount);
+  });
+
+}
+
 function updateTotalsOnly() {
   const budget = data[currentPerson];
   const totalRevenus = sumItems(budget.revenus);
@@ -265,7 +453,6 @@ function updateTotalsOnly() {
   const totalEpargne = sumItems(budget.epargne);
   const totalDepensesFixes = sumCategories(budget.depensesFixes);
   const totalDepensesVariables = sumItems(budget.depensesVariables);
-  const totalDepenses = totalDepensesFixes + totalDepensesVariables;
 
   document.getElementById("total-revenus").textContent = `${totalRevenus.toFixed(2)} €`;
   document.getElementById("total-investissements").textContent = `${totalInvestissements.toFixed(2)} €`;
@@ -273,24 +460,7 @@ function updateTotalsOnly() {
   document.getElementById("total-depensesFixes").textContent = `${totalDepensesFixes.toFixed(2)} €`;
   document.getElementById("total-depensesVariables").textContent = `${totalDepensesVariables.toFixed(2)} €`;
 
-  let pctDepenses = 0, pctEpargne = 0, pctInvestissements = 0, pctReste = 0;
-
-  if (totalRevenus > 0) {
-    pctDepenses = (totalDepenses / totalRevenus) * 100;
-    pctEpargne = (totalEpargne / totalRevenus) * 100;
-    pctInvestissements = (totalInvestissements / totalRevenus) * 100;
-    pctReste = Math.max(0, 100 - pctDepenses - pctEpargne - pctInvestissements);
-  }
-
-  document.getElementById("bar-depenses").style.width = `${pctDepenses}%`;
-  document.getElementById("bar-epargne").style.width = `${pctEpargne}%`;
-  document.getElementById("bar-investissements").style.width = `${pctInvestissements}%`;
-  document.getElementById("bar-reste").style.width = `${pctReste}%`;
-
-  document.getElementById("pct-depenses").textContent = `${pctDepenses.toFixed(1)}%`;
-  document.getElementById("pct-epargne").textContent = `${pctEpargne.toFixed(1)}%`;
-  document.getElementById("pct-investissements").textContent = `${pctInvestissements.toFixed(1)}%`;
-  document.getElementById("pct-reste").textContent = `${pctReste.toFixed(1)}%`;
+  renderBudgetChart(budget);
 
   sauvegarder();
 }

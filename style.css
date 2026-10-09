@@ -201,44 +201,62 @@ body {
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-.bar-container {
-  display: flex;
-  height: 24px;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 1rem;
-  background: #eee;
+.budget-chart-scroll {
+  overflow-x: auto;
+  padding: 0.75rem;
+  border: 1px solid #e7e9ee;
+  border-radius: 14px;
+  background: #f8f9fb;
+  scrollbar-color: #b8bdc8 transparent;
 }
 
-.bar-segment {
-  height: 100%;
-  transition: width 0.3s ease;
+.budget-chart {
+  display: block;
+  width: 100%;
+  min-width: 660px;
+  overflow: visible;
 }
 
-.bar-segment.depenses { background: #e67e22; }
-.bar-segment.epargne { background: #9b59b6; }
-.bar-segment.investissements { background: #2980b9; }
-.bar-segment.reste { background: #2ecc71; }
-
-.legend {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+.chart-flow {
+  fill-opacity: 0.54;
+  stroke: #fff;
+  stroke-opacity: 0.42;
+  stroke-width: 1;
+  transition: fill-opacity 0.2s ease, stroke-opacity 0.2s ease;
 }
 
-.dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 0.4rem;
+.chart-flow:hover {
+  fill-opacity: 0.76;
+  stroke-opacity: 0.8;
 }
 
-.dot.depenses { background: #e67e22; }
-.dot.epargne { background: #9b59b6; }
-.dot.investissements { background: #2980b9; }
-.dot.reste { background: #2ecc71; }
+.chart-node {
+  rx: 5px;
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.chart-label {
+  fill: #27272a;
+  font-weight: 600;
+  dominant-baseline: middle;
+}
+
+.chart-label-bg {
+  fill: #fff;
+  stroke: #e4e4e7;
+  stroke-width: 1;
+}
+
+.chart-value {
+  fill: #52525b;
+  font-size: 12px;
+}
+
+.chart-empty {
+  fill: #71717a;
+  font-size: 14px;
+}
 
 /* --- STYLES MODE NUIT --- */
 body.dark-mode {
@@ -301,6 +319,33 @@ body.dark-mode .btn-add-small {
   color: #e4e4e7;
 }
 
-body.dark-mode .bar-container {
-  background: #3f3f46;
+body.dark-mode .budget-chart-scroll {
+  background: #202024;
+  border-color: #3f3f46;
+  scrollbar-color: #52525b transparent;
+}
+
+body.dark-mode .chart-flow {
+  stroke: #202024;
+}
+
+body.dark-mode .chart-node {
+  stroke: #202024;
+}
+
+body.dark-mode .chart-label {
+  fill: #f4f4f5;
+}
+
+body.dark-mode .chart-label-bg {
+  fill: #3f3f46;
+  stroke: #52525b;
+}
+
+body.dark-mode .chart-value {
+  fill: #d4d4d8;
+}
+
+body.dark-mode .chart-empty {
+  fill: #a1a1aa;
 }
