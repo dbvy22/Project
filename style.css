@@ -6,9 +6,9 @@
   --page-bg: #f4f6f8;
   --surface: #fff;
   --chart-surface: #f8f9fb;
-  --accent-blue: #3988ff;
-  --accent-teal: #32d6b2;
-  --accent-purple: #a76af3;
+  --accent-blue: #344b58;
+  --accent-teal: #3d5554;
+  --accent-purple: #4b3b50;
   --brand-gradient: linear-gradient(115deg, var(--accent-blue), var(--accent-teal) 52%, var(--accent-purple));
 }
 
@@ -94,9 +94,9 @@ body::before {
 }
 
 .btn-person.active {
-  background: linear-gradient(110deg, var(--accent-blue), #4b9cf5 55%, #559ee8);
+  background: var(--brand-gradient);
   color: #fff;
-  box-shadow: 0 3px 10px rgba(57, 136, 255, 0.24);
+  box-shadow: 0 3px 10px rgba(52, 75, 88, 0.2);
 }
 
 .card {
@@ -166,7 +166,7 @@ body::before {
 .categorie-header input[type="text"]:focus {
   outline: none;
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(57, 136, 255, 0.14);
+  box-shadow: 0 0 0 3px rgba(76, 104, 113, 0.14);
 }
 
 .item-row input[type="text"] {
@@ -188,7 +188,7 @@ body::before {
 }
 
 .btn-add {
-  background: linear-gradient(110deg, var(--accent-blue), #347bec);
+  background: var(--brand-gradient);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -199,8 +199,8 @@ body::before {
 }
 
 .btn-add:hover {
-  background: linear-gradient(110deg, #2879ef, #286cdb);
-  box-shadow: 0 4px 12px rgba(57, 136, 255, 0.24);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 12px rgba(52, 75, 88, 0.2);
 }
 
 .total-line {
@@ -238,8 +238,8 @@ body::before {
 }
 
 .btn-add-small {
-  background: rgba(57, 136, 255, 0.1);
-  color: #246bd0;
+  background: rgba(76, 104, 113, 0.12);
+  color: #3d5b65;
   border: none;
   border-radius: 8px;
   padding: 0.3rem 0.7rem;
@@ -313,9 +313,9 @@ body.dark-mode {
   --page-bg: #18181b;
   --surface: #27272a;
   --chart-surface: #202024;
-  --accent-blue: #438cff;
-  --accent-teal: #3bd9c2;
-  --accent-purple: #b276f5;
+  --accent-blue: #38525e;
+  --accent-teal: #405a56;
+  --accent-purple: #514157;
   --brand-gradient: linear-gradient(115deg, var(--accent-blue), var(--accent-teal) 52%, var(--accent-purple));
 }
 
@@ -345,7 +345,7 @@ body.dark-mode .btn-person {
 }
 
 body.dark-mode .btn-person.active {
-  background: linear-gradient(110deg, #347ded, #368ee9 55%, #7864e8);
+  background: var(--brand-gradient);
   color: #ffffff;
 }
 
@@ -366,24 +366,24 @@ body.dark-mode .categorie-block {
 }
 
 body.dark-mode .btn-add {
-  background: linear-gradient(110deg, #347ded, #368ee9 55%, #7864e8);
+  background: var(--brand-gradient);
   color: #ffffff;
 }
 
 body.dark-mode .btn-add:hover {
-  background: linear-gradient(110deg, #286cda, #2c7fd8 55%, #6954d6);
+  filter: brightness(1.15);
 }
 
 body.dark-mode .btn-add-small {
-  background: rgba(67, 140, 255, 0.16);
-  color: #9fc4ff;
+  background: rgba(112, 145, 151, 0.18);
+  color: #b5cecf;
 }
 
 body.dark-mode .item-row input[type="text"]:focus,
 body.dark-mode .item-row input[type="number"]:focus,
 body.dark-mode .categorie-header input[type="text"]:focus {
   border-color: var(--accent-teal);
-  box-shadow: 0 0 0 3px rgba(59, 217, 194, 0.15);
+  box-shadow: 0 0 0 3px rgba(113, 161, 151, 0.18);
 }
 
 body.dark-mode .budget-chart-scroll {
