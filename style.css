@@ -6,9 +6,9 @@
   --page-bg: #f4f6f8;
   --surface: #fff;
   --chart-surface: #f8f9fb;
-  --accent-blue: #344b58;
-  --accent-teal: #3d5554;
-  --accent-purple: #4b3b50;
+  --accent-blue: #3c5968;
+  --accent-teal: #456662;
+  --accent-purple: #59445f;
   --brand-gradient: linear-gradient(115deg, var(--accent-blue), var(--accent-teal) 52%, var(--accent-purple));
 }
 
@@ -313,9 +313,9 @@ body.dark-mode {
   --page-bg: #18181b;
   --surface: #27272a;
   --chart-surface: #202024;
-  --accent-blue: #38525e;
-  --accent-teal: #405a56;
-  --accent-purple: #514157;
+  --accent-blue: #3c5968;
+  --accent-teal: #456662;
+  --accent-purple: #59445f;
   --brand-gradient: linear-gradient(115deg, var(--accent-blue), var(--accent-teal) 52%, var(--accent-purple));
 }
 

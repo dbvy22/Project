@@ -404,7 +404,7 @@ function renderBudgetChart(budget) {
   };
 
   const revenueY = (hauteur - revenuHauteur) / 2;
-  addFlow(35, revenueY, 189, budgetY, totalRevenus, "#b9c8f4");
+  addFlow(35, revenueY, 189, budgetY, totalRevenus, "#728aa5");
   let revenueOffset = 0;
   positionsGroupes.forEach(group => {
     addFlow(196, budgetY + revenueOffset, 390, group.y, group.valeur, group.couleur);
